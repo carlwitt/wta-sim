@@ -10,7 +10,8 @@ class Task(
         val workflow: Workflow?,
         val runTime: Ticks,
         val submissionTime: Ticks,
-        val cpuDemand: Int
+        val cpuDemand: Int,
+        val memoryDemandBytes : Long
 ) {
 
     private val _dependencies = mutableSetOf<Task>()

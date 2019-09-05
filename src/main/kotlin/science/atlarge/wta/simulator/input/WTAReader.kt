@@ -11,6 +11,7 @@ import org.apache.parquet.filter2.predicate.FilterApi
 import org.apache.parquet.hadoop.ParquetFileReader
 import org.apache.parquet.hadoop.util.HadoopInputFile
 import org.apache.parquet.io.ColumnIOFactory
+import org.apache.parquet.io.InvalidRecordException
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
 import science.atlarge.wta.simulator.model.Ticks
@@ -192,6 +193,12 @@ class WTAReader : TraceReader(), SamplingTraceReader {
                     val submitTime = record.getLong("ts_submit", 0)
                     val runTime = record.getLong("runtime", 0)
                     val cores = record.getDouble("resource_amount_requested", 0).roundToInt()
+                    var memoryDemandBytes = 0L
+                    try {
+                        // TODO parse memory from trace.
+                        // TODO enforce memory limits in scheduling.
+                        memoryDemandBytes = (record.getDouble("memory_requested", 0) * 1e6).toLong()
+                    } catch (e: InvalidRecordException){ }
                     val TMP = record.getDouble("resource_amount_requested", 0)
                     if (TMP != cores.toDouble()) {
                         println("Non-integer cores: $TMP")
@@ -202,7 +209,7 @@ class WTAReader : TraceReader(), SamplingTraceReader {
                         dependenciesGroup.getGroup(0, i).getLong(0, 0)
                     }
 
-                    taskRecords.add(WTATaskRecord(workflowId, taskId, submitTime, runTime, cores, dependencies))
+                    taskRecords.add(WTATaskRecord(workflowId, taskId, submitTime, runTime, cores, memoryDemandBytes, dependencies))
                 }
             }
         }
@@ -240,7 +247,7 @@ class WTAReader : TraceReader(), SamplingTraceReader {
         // Create tasks
         for (task in tasks) {
             val workflow = if (task.workflowId != null) trace.getWorkflowByName(task.workflowId.toString()) else null
-            trace.createTask(task.taskId.toString(), workflow, task.runTime, task.submitTime, task.cores)
+            trace.createTask(task.taskId.toString(), workflow, task.runTime, task.submitTime, task.cores, task.memoryDemandBytes?:0)
         }
         // Add dependencies
         for (taskRecord in tasks) {
@@ -274,5 +281,6 @@ private class WTATaskRecord(
         val submitTime: Ticks,
         val runTime: Ticks,
         val cores: Int,
+        val memoryDemandBytes: Long?,
         val dependencies: LongArray
 )

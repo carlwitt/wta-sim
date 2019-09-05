@@ -6,7 +6,8 @@ class Machine(
         val id: MachineId,
         val name: String,
         val cluster: Cluster,
-        val numberOfCpus: Int
+        val numberOfCpus: Int,
+        val memoryBytes: Long
 ) {
 
     init {
@@ -22,7 +23,7 @@ class Machine(
     }
 
     override fun toString(): String {
-        return "Machine(id=$id, name='$name', cluster=${cluster.id}, cpus=$numberOfCpus)"
+        return "Machine(id=$id, name='$name', cluster=${cluster.id}, cpus=$numberOfCpus ram=${memoryBytes / 1e9})"
     }
 
     fun idString(): String {

@@ -5,16 +5,19 @@ import science.atlarge.wta.simulator.model.Task
 
 class MachineState internal constructor(
         val machine: Machine,
-        freeCpus: Int
+        freeCpus: Int//, freeMemoryBytes: Long
 ) {
 
     var freeCpus = freeCpus
         private set
+//    var freeMemoryBytes = freeMemoryBytes
+//        private set
 
     private val _runningTasks = mutableSetOf<Task>()
     val runningTasks: Set<Task>
         get() = _runningTasks
 
+    //constructor(machine: Machine) : this(machine, machine.numberOfCpus, machine.memoryBytes)
     constructor(machine: Machine) : this(machine, machine.numberOfCpus)
 
     fun submitTask(task: Task) {
@@ -22,7 +25,13 @@ class MachineState internal constructor(
             "Not enough CPUs available on ${machine.idString()} to start ${task.idString()} " +
                     "($freeCpus < ${task.cpuDemand})"
         }
+//        require(task.memoryDemandBytes <= freeMemoryBytes) {
+//            "Not enough Memory available on ${machine.idString()} to start ${task.idString()} " +
+//                    "($freeMemoryBytes < ${task.memoryDemandBytes})"
+//        }
+
         freeCpus -= task.cpuDemand
+//        freeMemoryBytes -= task.memoryDemandBytes
         _runningTasks.add(task)
     }
 
@@ -31,6 +40,7 @@ class MachineState internal constructor(
             "${task.idString()} was not running on ${machine.idString()}"
         }
         freeCpus += task.cpuDemand
+//        freeMemoryBytes += task.memoryDemandBytes
     }
 
 }

@@ -14,6 +14,7 @@ data class CliValues(
         val resultPath: Path?,
         val machines: Int?,
         val cores: Int?,
+        val memoryPerMachine: Double?,
         val targetUtilization: Double?,
         val sampleFraction: Double?,
         val traceReader: TraceReader,
@@ -34,6 +35,7 @@ fun parseCliArgs(args: Array<String>): CliValues {
         val resultPathStr = cmd.getOptionStringOrNull(CliOptions.resultDir)
         val machines = cmd.getOptionIntOrNull(CliOptions.machines)
         val cores = cmd.getOptionIntOrNull(CliOptions.cores)
+        val memoryPerMachine = cmd.getOptionDoubleOrNull(CliOptions.memoryPerMachine)
         val targetUtilization = cmd.getOptionDoubleOrNull(CliOptions.targetUtilization)
         val taskPlacementPolicyStr = cmd.getOptionStringOrNull(CliOptions.taskPlacementPolicy)
         val taskOrderPolicyStr = cmd.getOptionStringOrNull(CliOptions.taskOrderPolicy)
@@ -54,12 +56,14 @@ fun parseCliArgs(args: Array<String>): CliValues {
         if (targetUtilization != null && (targetUtilization <= 0 || targetUtilization > 1))
             throw ParseException("Target utilization must be in the range (0, 1], was: $targetUtilization")
         if (cores != null && cores <= 0)
-            throw ParseException("A non-negative number of cores is required (was: $cores)")
+            throw ParseException("A positive number of cores is required (was: $cores)")
+        if (memoryPerMachine != null && memoryPerMachine <= 0)
+            throw ParseException("A positive amount of memory per machine is required (was: $memoryPerMachine)")
         // - Scheduler configuration
         val taskPlacementPolicy = parseTaskPlacementPolicy(taskPlacementPolicyStr)
         val taskOrderPolicy = parseTaskOrderPolicy(taskOrderPolicyStr)
 
-        return CliValues(tracePath, resultPath, machines, cores, targetUtilization, sampleFraction, traceReader,
+        return CliValues(tracePath, resultPath, machines, cores, memoryPerMachine, targetUtilization, sampleFraction, traceReader,
                 taskPlacementPolicy, taskOrderPolicy)
     } catch (e: ParseException) {
         println(e.message)
@@ -146,6 +150,12 @@ private object CliOptions {
             .desc("number of cores per simulated machine")
             .build()
 
+    var memoryPerMachine: Option = Option.builder("r")
+            .longOpt("memory-gb")
+            .hasArg()
+            .desc("amount of main memory in gigabyte, per machine")
+            .build()
+
     val targetUtilization: Option = Option.builder()
             .longOpt("target-utilization")
             .hasArg()
@@ -177,6 +187,7 @@ private object CliOptions {
         addOption(resultDir)
         addOption(machines)
         addOption(cores)
+        addOption(memoryPerMachine)
         addOption(targetUtilization)
         addOption(taskPlacementPolicy)
         addOption(taskOrderPolicy)

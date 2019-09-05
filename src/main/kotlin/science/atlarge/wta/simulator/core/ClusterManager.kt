@@ -18,7 +18,9 @@ class ClusterManager(
     private val machinesByFreeCpus = AVLTree(compareBy(MachineState::freeCpus, { it.machine.id }))
     private var stateChangedEventEmitted: Boolean = false
     private val dummyCluster = Cluster(-1, "X")
-    private val dummyMachine = Machine(-1, "X", dummyCluster, Int.MAX_VALUE)
+    //    private val dummyMachine = Machine(-1, "X", dummyCluster, Int.MAX_VALUE, Long.MAX_VALUE)
+
+    private val dummyMachine = Machine(-1, "X", dummyCluster, Int.MAX_VALUE, Long.MAX_VALUE)
 
     init {
         for (machine in environment.machines) {

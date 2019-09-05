@@ -57,6 +57,8 @@ object WTASim {
 
     private fun constructEnvironment(cli: CliValues, trace: Trace): Environment {
         var cpusPerMachine = cli.cores ?: 1
+        var memoryPerMachineGb = cli.memoryPerMachine ?: cpusPerMachine * 8.0
+
         val numMachines: Int
 
         // Check if the given number of CPUs per machine is sufficient
@@ -116,7 +118,7 @@ object WTASim {
         val environment = Environment().apply {
             val cluster = createCluster("Cluster")
             repeat(numMachines) { i ->
-                createMachine("Machine${i + 1}", cluster, cpusPerMachine)
+                createMachine("Machine${i + 1}", cluster, cpusPerMachine, (memoryPerMachineGb * 1e9).toLong())
             }
         }
 
@@ -124,6 +126,7 @@ object WTASim {
         println("Number of machines: ${environment.machines.size}")
         println("Number of CPUs per machine: $cpusPerMachine")
         println("Number of total CPUs: ${cpusPerMachine.toLong() * environment.machines.size}")
+        println("Total amount of main memory in cluster: ${memoryPerMachineGb * environment.machines.size.toDouble()} GB")
 
         return environment
     }
